@@ -1,15 +1,25 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.7;
 
 contract Lottery {
     address public manager; // a manager address is defined
     address payable[] public players; // a dynamic array of players is defined here.
 
+    struct Raffle {
+        uint raffleDate;
+        uint numberOfPlayers;
+        address manager;
+    }
+
+    Raffle raffle;
+
     mapping (address => int256) profits; // this mapping measures total profits or losses that an account has
 
-    constructor() { // this is our constructor function
+    constructor()  { // this is our constructor function
         manager = msg.sender; // constructor is the manager here.
+        raffle.manager = msg.sender;
+        raffle.raffleDate = block.timestamp;
     }
 
     function enter() public payable { // people can enter a lottery via this function.
@@ -17,6 +27,8 @@ contract Lottery {
         // standard amount here, but it would be harder for us to see the changes in the wallet. in real life, standard is better.
 
         players.push(payable(msg.sender)); // we add the person who enters the lottery to our players array
+
+        raffle.numberOfPlayers = raffle.numberOfPlayers + 1;
 
         profits[msg.sender] = profits[msg.sender] - int(msg.value); // we keep track of his/her profit or loss value.
     }
@@ -32,6 +44,8 @@ contract Lottery {
 
         players[index].transfer(address(this).balance); // balance is transferred to the winner account.
 
+
+        raffle = Raffle(0,0,0x0000000000000000000000000000000000000000);
         players = new address payable[](0);    // players are reset to be able to start the lottery from zero.
 
     }
@@ -49,5 +63,9 @@ contract Lottery {
 
         return profits[_theAddress];
 
+    }
+
+    function getRaffleDetails() public  view returns (Raffle memory) {
+        return raffle;
     }
 }
